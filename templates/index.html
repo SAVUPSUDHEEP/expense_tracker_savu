@@ -96,6 +96,12 @@ function showError(msg) {
     setTimeout(() => box.textContent = "", 4000);
 }
 
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 async function loadExpenses() {
     const category = document.getElementById("filterCategory").value;
     const dateFrom = document.getElementById("filterDateFrom").value;
@@ -128,10 +134,10 @@ async function loadExpenses() {
     for (const e of expenses) {
         html += `<tr>
             <td>${e.date}</td>
-            <td>${e.title}</td>
+            <td>${escapeHtml(e.title)}</td>
             <td>${e.category}</td>
             <td>₹${e.amount.toFixed(2)}</td>
-            <td>${e.note || ""}</td>
+            <td>${escapeHtml(e.note || "")}</td>
             <td>
                 <button onclick="editExpense(${e.id}, '${e.title.replace(/'/g, "\\'")}', ${e.amount}, '${e.category}', '${e.date}', '${(e.note || "").replace(/'/g, "\\'")}')" title="Edit">✏️</button>
                 <button onclick="deleteExpense(${e.id})" title="Delete">🗑️</button>
@@ -162,6 +168,9 @@ async function loadSummary() {
 document.getElementById("expenseForm").addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    const submitBtn = document.getElementById("submitBtn");
+    submitBtn.disabled = true;
+
     const editId = document.getElementById("editId").value;
     const payload = {
         title: document.getElementById("title").value,
@@ -174,22 +183,26 @@ document.getElementById("expenseForm").addEventListener("submit", async (e) => {
     const url = editId ? `${API}/${editId}` : API;
     const method = editId ? "PUT" : "POST";
 
-    const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-    });
+    try {
+        const res = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
 
-    const result = await res.json();
+        const result = await res.json();
 
-    if (!res.ok) {
-        showError(result.error || "Something went wrong");
-        return;
+        if (!res.ok) {
+            showError(result.error || "Something went wrong");
+            return;
+        }
+
+        resetForm();
+        loadExpenses();
+        loadSummary();
+    } finally {
+        submitBtn.disabled = false;
     }
-
-    resetForm();
-    loadExpenses();
-    loadSummary();
 });
 
 function editExpense(id, title, amount, category, date, note) {
