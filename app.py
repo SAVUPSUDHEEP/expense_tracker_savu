@@ -4,6 +4,7 @@ from datetime import date
 
 app = Flask(__name__)
 DB_NAME = "expenses.db"
+VALID_CATEGORIES = ["Food", "Transport", "Shopping"]
 
 
 def init_db():
@@ -36,7 +37,9 @@ def home():
 # ---- CREATE ----
 @app.route("/api/expenses", methods=["POST"])
 def add_expense():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if data is None:
+        return jsonify({"error": "Request body must be valid JSON"}), 400
 
     title = data.get("title", "").strip()
     amount = data.get("amount")
@@ -47,9 +50,9 @@ def add_expense():
     # Validation - edge cases
     if not title:
         return jsonify({"error": "Title is required"}), 400
-    if amount is None or not isinstance(amount, (int, float)) or amount <= 0:
-        return jsonify({"error": "Amount must be a positive number"}), 400
-    if category not in ["Food", "Transport", "Shopping"]:
+    if amount is None or not isinstance(amount, (int, float)) or amount <= 0 or amount > 10000000:
+        return jsonify({"error": "Amount must be a positive number up to 1,00,00,000"}), 400
+    if category not in VALID_CATEGORIES:
         return jsonify({"error": "Invalid category"}), 400
 
     conn = get_db()
@@ -99,7 +102,9 @@ def list_expenses():
 # ---- UPDATE ----
 @app.route("/api/expenses/<int:expense_id>", methods=["PUT"])
 def update_expense(expense_id):
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if data is None:
+        return jsonify({"error": "Request body must be valid JSON"}), 400
 
     title = data.get("title", "").strip()
     amount = data.get("amount")
@@ -109,9 +114,9 @@ def update_expense(expense_id):
 
     if not title:
         return jsonify({"error": "Title is required"}), 400
-    if amount is None or not isinstance(amount, (int, float)) or amount <= 0:
-        return jsonify({"error": "Amount must be a positive number"}), 400
-    if category not in ["Food", "Transport", "Shopping"]:
+    if amount is None or not isinstance(amount, (int, float)) or amount <= 0 or amount > 10000000:
+        return jsonify({"error": "Amount must be a positive number up to 1,00,00,000"}), 400
+    if category not in VALID_CATEGORIES:
         return jsonify({"error": "Invalid category"}), 400
     if not expense_date:
         return jsonify({"error": "Date is required"}), 400
