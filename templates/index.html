@@ -14,9 +14,9 @@
     .error { color: red; margin-bottom: 10px; }
     .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 15px 0; }
     .empty { color: #888; font-style: italic; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
-    .tab-btn { padding: 10px 16px; border: none; background: none; cursor: pointer; font-size: 15px; border-bottom: 3px solid transparent; }
-    .tab-btn.active { border-bottom: 3px solid #333; font-weight: bold; }
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
+.tab-btn { padding: 10px 16px; border: none; background: none; cursor: pointer; font-size: 15px; border-bottom: 3px solid transparent; }
+.tab-btn.active { border-bottom: 3px solid #333; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -102,6 +102,12 @@ async function loadExpenses() {
     const dateTo = document.getElementById("filterDateTo").value;
     const title = document.getElementById("filterTitle").value;
 
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+        showError("Please enter a valid date range (From date must be before To date).");
+        document.getElementById("expenseList").innerHTML = "";
+        return;
+    }
+
     const params = new URLSearchParams();
     if (category) params.append("category", category);
     if (dateFrom) params.append("date_from", dateFrom);
@@ -127,8 +133,8 @@ async function loadExpenses() {
             <td>₹${e.amount.toFixed(2)}</td>
             <td>${e.note || ""}</td>
             <td>
-                <button onclick="editExpense(${e.id}, '${e.title}', ${e.amount}, '${e.category}', '${e.date}', '${e.note || ""}')">Edit</button>
-                <button onclick="deleteExpense(${e.id})">Delete</button>
+                <button onclick="editExpense(${e.id}, '${e.title.replace(/'/g, "\\'")}', ${e.amount}, '${e.category}', '${e.date}', '${(e.note || "").replace(/'/g, "\\'")}')" title="Edit">✏️</button>
+                <button onclick="deleteExpense(${e.id})" title="Delete">🗑️</button>
             </td>
         </tr>`;
     }
@@ -195,7 +201,10 @@ function editExpense(id, title, amount, category, date, note) {
     document.getElementById("note").value = note;
     document.getElementById("submitBtn").textContent = "Update Expense";
     document.getElementById("cancelEditBtn").style.display = "inline-block";
-    showTab('add');
+
+    document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+    document.getElementById("tab-add").style.display = "block";
     document.querySelectorAll(".tab-btn")[0].classList.add("active");
 }
 
