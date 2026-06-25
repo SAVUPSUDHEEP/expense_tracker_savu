@@ -14,6 +14,9 @@
     .error { color: red; margin-bottom: 10px; }
     .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 15px 0; }
     .empty { color: #888; font-style: italic; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
+    .tab-btn { padding: 10px 16px; border: none; background: none; cursor: pointer; font-size: 15px; border-bottom: 3px solid transparent; }
+    .tab-btn.active { border-bottom: 3px solid #333; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -22,6 +25,13 @@
 
 <div id="errorBox" class="error"></div>
 
+<div class="tabs">
+    <button class="tab-btn active" onclick="showTab('add')">Add Expense</button>
+    <button class="tab-btn" onclick="showTab('summary')">Monthly Summary</button>
+    <button class="tab-btn" onclick="showTab('list')">All Expenses</button>
+</div>
+
+<div id="tab-add" class="tab-content">
 <h2>Add Expense</h2>
 <form id="expenseForm">
     <input type="hidden" id="editId" value="">
@@ -39,9 +49,14 @@
     <button type="button" id="cancelEditBtn" style="display:none;">Cancel</button>
 </form>
 
+</div>
+
+<div id="tab-summary" class="tab-content" style="display:none;">
 <h2>Monthly Summary</h2>
 <div id="summaryBox"></div>
+</div>
 
+<div id="tab-list" class="tab-content" style="display:none;">
 <h2>Filters</h2>
 <div class="filters">
     <select id="filterCategory">
@@ -59,8 +74,20 @@
 
 <h2>All Expenses</h2>
 <div id="expenseList"></div>
+</div>
 
 <script>
+function showTab(tabName) {
+    document.querySelectorAll(".tab-content").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+
+    document.getElementById("tab-" + tabName).style.display = "block";
+    event.target.classList.add("active");
+
+    if (tabName === "summary") loadSummary();
+    if (tabName === "list") loadExpenses();
+}
+
 const API = "/api/expenses";
 
 function showError(msg) {
@@ -168,6 +195,8 @@ function editExpense(id, title, amount, category, date, note) {
     document.getElementById("note").value = note;
     document.getElementById("submitBtn").textContent = "Update Expense";
     document.getElementById("cancelEditBtn").style.display = "inline-block";
+    showTab('add');
+    document.querySelectorAll(".tab-btn")[0].classList.add("active");
 }
 
 function resetForm() {
