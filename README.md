@@ -40,7 +40,18 @@ The database file (`expenses.db`) is created automatically on first run.
 - Empty expense list shows a friendly "No expenses found" message instead of a blank table
 - Empty monthly summary (no expenses yet this month) shows a friendly message instead of ₹0.00 with no context
 - Invalid inputs (empty title, non-positive or non-numeric amount, invalid category) are rejected with clear error messages, both on add and edit
+- Amount is capped at a sane upper bound (1,00,00,000) to reject accidental or malicious absurdly large values
 - Date defaults to today if left blank when adding an expense
-- Filtering by a date range where "from" is after "to" simply returns no results (no crash) since the underlying SQL comparison naturally handles it
+- Invalid date range (From date after To date) shows an explicit error message instead of silently returning an empty list
 - Deleting or editing a non-existent expense ID returns a proper error instead of crashing
-- Title search is case-insensitive partial match, so partial/typo-free substrings still find results
+- Title search is case-insensitive partial match, so partial substrings still find results
+- Title and note fields are HTML-escaped on render to prevent injected markup/scripts from executing
+- Malformed/non-JSON request bodies are rejected with a clean error instead of crashing the server
+- The Add/Update button is disabled while a request is in flight, preventing duplicate entries from double-clicking submit
+- Apostrophes and special characters in title/note are safely handled in the edit action
+
+## Known limitations / not implemented (by design)
+
+- No authentication or multi-user support — out of scope for this single-user local app
+- No multi-currency support — task specified a single local currency, so amounts are shown in ₹ only
+- No automated test suite — manual testing was performed across all CRUD operations, filters, and edge cases listed above
